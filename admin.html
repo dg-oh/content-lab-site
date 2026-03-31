@@ -1,31 +1,16 @@
 <!DOCTYPE html>
 <html>
-<head>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-<script src="firebase.js"></script>
-</head>
 <body>
 
-<h2>공지 작성</h2>
-<input id="title" placeholder="제목"><br>
-<textarea id="content"></textarea><br>
-<button onclick="add()">등록</button>
+<h2>공지 작성 (테스트)</h2>
 
-<script>
-auth.onAuthStateChanged(user=>{
-  if(!user) location.href="login.html";
-});
+<input placeholder="제목"><br>
+<textarea placeholder="내용"></textarea><br>
 
-function add(){
-  db.collection("notices").add({
-    title: title.value,
-    content: content.value,
-    date: new Date().toISOString()
-  }).then(()=>alert("등록 완료"));
-}
-</script>
+<button onclick="alert('DB 연결 전이라 저장 안됨')">등록</button>
+
+<br><br>
+<a href="index.html">메인으로</a>
 
 </body>
 </html>
