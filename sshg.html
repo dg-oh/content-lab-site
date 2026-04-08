@@ -1,0 +1,701 @@
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:var(--font-sans,'Segoe UI',sans-serif)}
+#game{width:100%;max-width:480px;margin:0 auto;padding:8px;user-select:none}
+.screen{display:none}.screen.active{display:block}
+
+#title-screen{text-align:center;padding:2rem 1rem}
+#title-screen h1{font-size:28px;font-weight:500;color:var(--color-text-primary);letter-spacing:2px;margin-bottom:4px}
+#title-screen p{font-size:13px;color:var(--color-text-secondary);margin-bottom:2rem}
+.start-btn{display:block;width:100%;padding:14px;background:var(--color-background-secondary);border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-lg);font-size:16px;font-weight:500;color:var(--color-text-primary);cursor:pointer;margin-bottom:8px}
+.start-btn:active{opacity:0.7}
+
+#main-game{padding:4px}
+.top-bar{display:flex;justify-content:space-between;align-items:center;padding:8px 4px;margin-bottom:6px}
+.resource-box{display:flex;align-items:center;gap:6px;font-size:14px;font-weight:500;color:var(--color-text-primary)}
+.res-icon{width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:500}
+.mineral-icon{background:#B5D4F4;color:#0C447C}
+.gas-icon{background:#9FE1CB;color:#085041}
+.wave-badge{font-size:12px;color:var(--color-text-secondary);background:var(--color-background-secondary);padding:4px 10px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-tertiary)}
+
+.battle-field{border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);overflow:hidden;background:var(--color-background-secondary);margin-bottom:8px;position:relative}
+canvas#battle-canvas{display:block;width:100%;height:220px}
+
+.lane-labels{display:flex;justify-content:space-between;padding:2px 8px;margin-bottom:6px}
+.lane-label{font-size:11px;color:var(--color-text-tertiary)}
+
+.bases{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px}
+.base-card{background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:8px}
+.base-title{font-size:11px;color:var(--color-text-secondary);margin-bottom:4px}
+.hp-bar{height:6px;border-radius:3px;background:var(--color-border-tertiary);overflow:hidden}
+.hp-fill{height:100%;border-radius:3px;transition:width 0.3s}
+.hp-val{font-size:12px;font-weight:500;color:var(--color-text-primary);margin-top:3px}
+
+.build-panel{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:10px;margin-bottom:8px}
+.panel-title{font-size:12px;color:var(--color-text-secondary);margin-bottom:8px}
+.unit-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.unit-btn{background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:6px 4px;cursor:pointer;text-align:center;position:relative}
+.unit-btn:active{opacity:0.6}
+.unit-btn.selected{border-color:#378ADD;border-width:1.5px}
+.unit-btn.cant-afford{opacity:0.4}
+.unit-name{font-size:10px;color:var(--color-text-primary);font-weight:500;line-height:1.2;margin-bottom:2px}
+.unit-cost{font-size:10px;color:var(--color-text-secondary)}
+.unit-icon{font-size:16px;margin-bottom:2px;width:24px;height:24px;display:flex;align-items:center;justify-content:center;margin:0 auto 2px}
+.unit-icon svg{width:20px;height:20px}
+.unit-count{position:absolute;top:3px;right:5px;font-size:10px;font-weight:500;color:#185FA5}
+
+.action-row{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px}
+.action-btn{padding:10px;background:var(--color-background-secondary);border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-lg);font-size:13px;font-weight:500;color:var(--color-text-primary);cursor:pointer;text-align:center}
+.action-btn:active{opacity:0.6}
+.action-btn.danger{border-color:#D85A30;color:#993C1D}
+
+.log-box{background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:8px;height:60px;overflow:hidden;position:relative}
+.log-line{font-size:11px;color:var(--color-text-secondary);line-height:1.6}
+.log-line.highlight{color:var(--color-text-primary);font-weight:500}
+
+#result-screen{text-align:center;padding:2rem 1rem}
+#result-screen h2{font-size:24px;font-weight:500;margin-bottom:8px}
+#result-screen p{font-size:14px;color:var(--color-text-secondary);margin-bottom:1.5rem}
+
+.race-select{margin-bottom:1.5rem}
+.race-title{font-size:13px;color:var(--color-text-secondary);margin-bottom:8px}
+.race-btns{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.race-btn{padding:10px 6px;background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);cursor:pointer;text-align:center}
+.race-btn.active{border-color:#378ADD;border-width:1.5px;background:var(--color-background-info)}
+.race-btn:active{opacity:0.6}
+.race-name{font-size:13px;font-weight:500;color:var(--color-text-primary)}
+.race-desc{font-size:10px;color:var(--color-text-secondary);margin-top:3px}
+</style>
+
+<div id="game">
+
+<div id="title-screen" class="screen active">
+  <h1>VOID STRIKE</h1>
+  <p>우주 자동 전투 전략 게임</p>
+  <div class="race-select">
+    <div class="race-title">종족 선택</div>
+    <div class="race-btns">
+      <div class="race-btn active" onclick="selectRace('human')" id="race-human">
+        <div style="font-size:18px;margin-bottom:3px">&#9651;</div>
+        <div class="race-name">인류</div>
+        <div class="race-desc">방어 중심<br>포병 특화</div>
+      </div>
+      <div class="race-btn" onclick="selectRace('alien')" id="race-alien">
+        <div style="font-size:18px;margin-bottom:3px">&#10006;</div>
+        <div class="race-name">외계</div>
+        <div class="race-desc">다수 물량<br>변이 가능</div>
+      </div>
+      <div class="race-btn" onclick="selectRace('mech')" id="race-mech">
+        <div style="font-size:18px;margin-bottom:3px">&#9632;</div>
+        <div class="race-name">기계</div>
+        <div class="race-desc">공중 우위<br>후반 강력</div>
+      </div>
+    </div>
+  </div>
+  <button class="start-btn" onclick="startGame()">전투 시작</button>
+  <button class="start-btn" onclick="showGuide()" style="font-size:13px;color:var(--color-text-secondary)">게임 방법</button>
+</div>
+
+<div id="main-game" class="screen">
+  <div class="top-bar">
+    <div class="resource-box">
+      <div class="res-icon mineral-icon">M</div>
+      <span id="minerals">150</span>
+    </div>
+    <div class="wave-badge">웨이브 <span id="wave-num">1</span></div>
+    <div class="resource-box">
+      <div class="res-icon gas-icon">G</div>
+      <span id="gas">0</span>
+    </div>
+  </div>
+
+  <div class="battle-field">
+    <canvas id="battle-canvas" width="460" height="220"></canvas>
+  </div>
+
+  <div class="bases">
+    <div class="base-card">
+      <div class="base-title">내 기지</div>
+      <div class="hp-bar"><div class="hp-fill" id="my-hp-bar" style="width:100%;background:#378ADD"></div></div>
+      <div class="hp-val" id="my-hp-val">1000 / 1000</div>
+    </div>
+    <div class="base-card" style="text-align:right">
+      <div class="base-title">적 기지</div>
+      <div class="hp-bar"><div class="hp-fill" id="en-hp-bar" style="width:100%;background:#D85A30;margin-left:auto"></div></div>
+      <div class="hp-val" id="en-hp-val">1000 / 1000</div>
+    </div>
+  </div>
+
+  <div class="build-panel">
+    <div class="panel-title">유닛 배치 (클릭하여 구매)</div>
+    <div class="unit-grid" id="unit-grid"></div>
+  </div>
+
+  <div class="action-row">
+    <div class="action-btn" onclick="activateSpecial()">특수기 사용 &#9889;</div>
+    <div class="action-btn danger" onclick="rushAttack()">총공격 &#9658;&#9658;</div>
+  </div>
+
+  <div class="log-box" id="log-box">
+    <div class="log-line">전투 개시!</div>
+  </div>
+</div>
+
+<div id="result-screen" class="screen">
+  <h2 id="result-title"></h2>
+  <p id="result-desc"></p>
+  <p style="font-size:13px;color:var(--color-text-secondary);margin-bottom:1rem" id="result-stats"></p>
+  <button class="start-btn" onclick="showTitle()">다시 하기</button>
+</div>
+
+</div>
+
+<script>
+const RACES = {
+  human:{
+    name:'인류',
+    color:'#378ADD',
+    units:[
+      {id:'marine',name:'보병',cost:50,hp:60,atk:8,speed:1.2,range:80,icon:'▲',gasReq:0,desc:'기본'},
+      {id:'tank',name:'포병',cost:150,hp:120,atk:25,speed:0.6,range:130,icon:'■',gasReq:1,desc:'장거리'},
+      {id:'medic',name:'의무병',cost:80,hp:40,atk:0,speed:1.0,range:60,icon:'✚',gasReq:0,heal:4,desc:'치유'},
+      {id:'goliath',name:'골리앗',cost:200,hp:200,atk:18,speed:0.9,range:100,icon:'◆',gasReq:2,desc:'범용'},
+      {id:'battlecruiser',name:'전함',cost:500,hp:600,atk:50,speed:0.5,range:150,icon:'★',gasReq:3,desc:'후반필살'},
+      {id:'ghost',name:'유령',cost:120,hp:45,atk:12,speed:1.3,range:110,icon:'◇',gasReq:1,desc:'고속'},
+      {id:'vulture',name:'바이크',cost:100,hp:80,atk:15,speed:1.8,range:70,icon:'⬡',gasReq:0,desc:'초고속'},
+      {id:'vessel',name:'과학선',cost:250,hp:100,atk:0,speed:0.8,range:0,icon:'○',gasReq:2,heal:8,aoe:true,desc:'범위힐'},
+    ]
+  },
+  alien:{
+    name:'외계',
+    color:'#D85A30',
+    units:[
+      {id:'zergling',name:'저격병',cost:25,hp:35,atk:10,speed:2.2,range:40,icon:'◀',gasReq:0,desc:'초고속'},
+      {id:'hydra',name:'히드라',cost:75,hp:80,atk:12,speed:1.1,range:100,icon:'◈',gasReq:0,desc:'장거리'},
+      {id:'lurker',name:'매복자',cost:150,hp:120,atk:20,speed:0.7,range:90,icon:'▼',gasReq:1,desc:'범위공격'},
+      {id:'queen',name:'여왕',cost:200,hp:150,atk:0,speed:0.8,range:80,icon:'♛',gasReq:1,heal:6,spawn:true,desc:'증식'},
+      {id:'guardian',name:'수호자',cost:350,hp:250,atk:35,speed:0.5,range:160,icon:'✦',gasReq:2,desc:'초장거리'},
+      {id:'ultra',name:'울트라',cost:400,hp:500,atk:40,speed:0.9,range:50,icon:'▣',gasReq:3,desc:'탱커'},
+      {id:'muta',name:'뮤탈',cost:100,hp:70,atk:9,speed:1.6,range:60,air:true,icon:'❋',gasReq:1,desc:'공중'},
+      {id:'defiler',name:'결핍자',cost:250,hp:80,atk:0,speed:0.7,debuff:true,icon:'☠',gasReq:2,desc:'약화'},
+    ]
+  },
+  mech:{
+    name:'기계',
+    color:'#5DCAA5',
+    units:[
+      {id:'scout',name:'정찰기',cost:75,hp:60,atk:10,speed:1.7,range:90,air:true,icon:'△',gasReq:0,desc:'공중'},
+      {id:'corsair',name:'전투기',cost:120,hp:90,atk:14,speed:1.5,range:100,air:true,icon:'◭',gasReq:1,desc:'공중강'},
+      {id:'dragoon',name:'드라군',cost:125,hp:160,atk:20,speed:1.0,range:110,icon:'◉',gasReq:0,desc:'균형'},
+      {id:'zealot',name:'광전사',cost:100,hp:200,atk:16,speed:1.1,range:40,icon:'◑',gasReq:0,desc:'근접돌격'},
+      {id:'reaver',name:'파괴자',cost:300,hp:150,atk:45,speed:0.5,range:120,aoe:true,icon:'❖',gasReq:2,desc:'범위폭발'},
+      {id:'carrier',name:'모선',cost:600,hp:700,atk:0,speed:0.4,range:130,spawner:true,icon:'⊕',gasReq:3,desc:'전투기배출'},
+      {id:'arbiter',name:'중재자',cost:350,hp:200,atk:15,speed:0.7,range:100,cloak:true,icon:'◈',gasReq:2,desc:'은폐장'},
+      {id:'dark',name:'암흑기사',cost:175,hp:80,atk:30,speed:1.2,range:45,crit:true,icon:'◐',gasReq:1,desc:'치명타'},
+    ]
+  }
+};
+
+let selectedRace = 'human';
+let gameState = null;
+let animFrame = null;
+let logLines = [];
+
+function selectRace(r){
+  selectedRace = r;
+  document.querySelectorAll('.race-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('race-'+r).classList.add('active');
+}
+
+function showTitle(){
+  if(animFrame) cancelAnimationFrame(animFrame);
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById('title-screen').classList.add('active');
+}
+
+function showGuide(){
+  addLog('유닛 구매 → 자동 전투 → 적 기지 파괴!','highlight');
+  addLog('가스는 신전 파괴 후 획득. 고급 유닛은 가스 필요.');
+}
+
+function startGame(){
+  const race = RACES[selectedRace];
+  gameState = {
+    race: selectedRace,
+    minerals: 150,
+    gas: 0,
+    wave: 1,
+    myHP: 1000,
+    myMaxHP: 1000,
+    enemyHP: 1000,
+    enemyMaxHP: 1000,
+    myUnits: [],
+    enemyUnits: [],
+    myQueue: {},
+    enemyQueue: {},
+    mineralTimer: 0,
+    spawnTimer: 0,
+    enemyAITimer: 0,
+    specialCooldown: 0,
+    waveTimer: 0,
+    gasStructures: 0,
+    particles: [],
+    lineHP: 50,
+    lineMaxHP: 50,
+    lineSide: 0.5,
+    tick: 0,
+    gameOver: false,
+    rushActive: false,
+    rushTimer: 0,
+  };
+  logLines = [];
+  addLog('전투 개시!');
+  addLog(race.name+'족 선택됨');
+  
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById('main-game').classList.add('active');
+  
+  buildUnitGrid();
+  startEnemyAI();
+  gameLoop();
+}
+
+function buildUnitGrid(){
+  const race = RACES[gameState.race];
+  const grid = document.getElementById('unit-grid');
+  grid.innerHTML='';
+  race.units.forEach((u,i)=>{
+    const div = document.createElement('div');
+    div.className = 'unit-btn';
+    div.id = 'ubtn-'+u.id;
+    div.innerHTML = `<div class="unit-icon" style="font-size:16px">${u.icon}</div>
+      <div class="unit-name">${u.name}</div>
+      <div class="unit-cost">${u.cost}M${u.gasReq?` ${u.gasReq}G`:''}</div>
+      <div class="unit-count" id="cnt-${u.id}"></div>`;
+    div.onclick = ()=>buyUnit(u);
+    grid.appendChild(div);
+  });
+}
+
+function buyUnit(u){
+  const gs = gameState;
+  if(!gs || gs.gameOver) return;
+  if(gs.minerals < u.cost){addLog('미네랄 부족!');return;}
+  if(gs.gas < (u.gasReq||0)){addLog('가스 부족! 전선을 밀어야 가스 획득');return;}
+  
+  gs.minerals -= u.cost;
+  gs.myQueue[u.id] = (gs.myQueue[u.id]||0)+1;
+  
+  const cnt = document.getElementById('cnt-'+u.id);
+  const total = Object.values(gs.myUnits).filter(mu=>mu.type===u.id).length + (gs.myQueue[u.id]||0);
+  if(cnt) cnt.textContent = gs.myQueue[u.id]>0?'+'+gs.myQueue[u.id]:'';
+  
+  addLog(u.name+' 배치!');
+}
+
+function activateSpecial(){
+  const gs = gameState;
+  if(!gs||gs.gameOver) return;
+  if(gs.specialCooldown>0){addLog(`특수기 재충전 중 (${Math.ceil(gs.specialCooldown/60)}초)`);return;}
+  if(gs.minerals < 200){addLog('미네랄 200 필요');return;}
+  gs.minerals -= 200;
+  gs.specialCooldown = 300;
+  // Nuke effect
+  for(let i=0;i<8;i++){
+    setTimeout(()=>{
+      if(gameState){
+        const killed = Math.floor(Math.random()*3)+1;
+        const before = gs.enemyUnits.length;
+        gs.enemyUnits.splice(0, Math.min(killed, gs.enemyUnits.length));
+        if(gs.enemyHP > 0) gs.enemyHP = Math.max(0, gs.enemyHP - 30);
+        for(let j=0;j<5;j++) gs.particles.push(makeParticle(Math.random()*460, 50+Math.random()*120, '#D85A30'));
+      }
+    }, i*80);
+  }
+  addLog('특수 폭격!','highlight');
+}
+
+function rushAttack(){
+  const gs = gameState;
+  if(!gs||gs.gameOver) return;
+  if(gs.rushActive){addLog('총공격 이미 진행 중');return;}
+  gs.rushActive = true;
+  gs.rushTimer = 180;
+  gs.myUnits.forEach(u=>{ u.speed *= 1.6; u.atk = Math.floor(u.atk*1.3); });
+  addLog('총공격!','highlight');
+}
+
+function startEnemyAI(){
+  // Enemy units are managed in game loop
+}
+
+function makeUnit(type, side, x, y){
+  const raceKey = side==='my' ? gameState.race : getEnemyRace();
+  const race = RACES[raceKey];
+  const def = race.units.find(u=>u.id===type) || race.units[0];
+  return {
+    id: Math.random(),
+    type: type,
+    side: side,
+    x: x,
+    y: y,
+    hp: def.hp + gameState.wave*8,
+    maxHP: def.hp + gameState.wave*8,
+    atk: def.atk + gameState.wave*1.5,
+    speed: def.speed,
+    range: def.range,
+    heal: def.heal||0,
+    aoe: def.aoe||false,
+    air: def.air||false,
+    crit: def.crit||false,
+    debuff: def.debuff||false,
+    icon: def.icon,
+    cooldown: 0,
+    color: side==='my' ? RACES[gameState.race].color : RACES[getEnemyRace()].color,
+  };
+}
+
+function getEnemyRace(){
+  const races = Object.keys(RACES);
+  const other = races.filter(r=>r!==gameState.race);
+  return other[gameState.wave % other.length];
+}
+
+function makeParticle(x,y,color){
+  return {x,y,color,vx:(Math.random()-0.5)*3,vy:(Math.random()-0.5)*3,life:30};
+}
+
+let lastTime = 0;
+function gameLoop(ts=0){
+  if(!gameState||gameState.gameOver) return;
+  const dt = Math.min(ts-lastTime, 50);
+  lastTime = ts;
+  
+  update(dt);
+  render();
+  updateUI();
+  
+  animFrame = requestAnimationFrame(gameLoop);
+}
+
+function update(dt){
+  const gs = gameState;
+  gs.tick++;
+  
+  // Mineral income
+  gs.mineralTimer++;
+  if(gs.mineralTimer >= 45){
+    gs.mineralTimer = 0;
+    gs.minerals += 10 + gs.wave*2 + gs.gasStructures*3;
+    if(gs.minerals > 9999) gs.minerals = 9999;
+  }
+  
+  // Special cooldown
+  if(gs.specialCooldown>0) gs.specialCooldown--;
+  
+  // Rush timer
+  if(gs.rushActive){
+    gs.rushTimer--;
+    if(gs.rushTimer<=0){
+      gs.rushActive=false;
+      addLog('총공격 종료');
+    }
+  }
+  
+  // Spawn from queue
+  gs.spawnTimer++;
+  if(gs.spawnTimer>=30){
+    gs.spawnTimer=0;
+    const race = RACES[gs.race];
+    race.units.forEach(u=>{
+      if(gs.myQueue[u.id]>0){
+        const y = 60 + Math.random()*100;
+        gs.myUnits.push(makeUnit(u.id,'my', 30, y));
+        gs.myQueue[u.id]--;
+        const cnt = document.getElementById('cnt-'+u.id);
+        if(cnt) cnt.textContent = gs.myQueue[u.id]>0?'+'+gs.myQueue[u.id]:'';
+      }
+    });
+  }
+  
+  // Enemy AI spawning
+  gs.enemyAITimer++;
+  const aiInterval = Math.max(60, 200 - gs.wave*15);
+  if(gs.enemyAITimer >= aiInterval){
+    gs.enemyAITimer = 0;
+    const eRace = RACES[getEnemyRace()];
+    const budget = 50 + gs.wave*40;
+    let spent = 0;
+    const affordable = eRace.units.filter(u=>u.cost<=budget && (!u.gasReq || u.gasReq <= Math.floor(gs.wave/3)));
+    if(affordable.length>0){
+      const pick = affordable[Math.floor(Math.random()*affordable.length)];
+      const y = 60 + Math.random()*100;
+      gs.enemyUnits.push(makeUnit(pick.id,'enemy', 430, y));
+    }
+  }
+  
+  // Wave progression
+  gs.waveTimer++;
+  if(gs.waveTimer >= 900){
+    gs.waveTimer = 0;
+    gs.wave++;
+    gs.gasStructures = Math.floor(gs.wave/2);
+    gs.gas = gs.gasStructures;
+    addLog(`웨이브 ${gs.wave}! 가스 ${gs.gas} 획득`,'highlight');
+    // Upgrade enemy
+    if(gs.wave%3===0){
+      gs.enemyMaxHP = Math.floor(gs.enemyMaxHP * 1.0);
+      addLog('적이 강해졌다!');
+    }
+  }
+  
+  // Move units
+  gs.myUnits.forEach(u=>{
+    const target = findTarget(u, gs.enemyUnits);
+    if(target){
+      const dx = target.x - u.x;
+      const dy = target.y - u.y;
+      const dist = Math.sqrt(dx*dx+dy*dy);
+      if(dist > u.range){
+        u.x += (dx/dist)*u.speed*(gs.rushActive?1.4:1);
+        u.y += (dy/dist)*0.3;
+      } else {
+        // Attack
+        u.cooldown--;
+        if(u.cooldown<=0){
+          u.cooldown = Math.max(15, 40-gs.wave*2);
+          let dmg = u.atk;
+          if(u.crit && Math.random()<0.3) dmg*=2.5;
+          target.hp -= dmg;
+          if(u.aoe){
+            gs.enemyUnits.forEach(e=>{
+              const d = Math.sqrt((e.x-target.x)**2+(e.y-target.y)**2);
+              if(d<50) e.hp -= dmg*0.5;
+            });
+          }
+          gs.particles.push(makeParticle(target.x,target.y,'#F0997B'));
+        }
+      }
+    } else {
+      // Advance
+      u.x += u.speed*(gs.rushActive?1.5:0.4);
+    }
+    u.x = Math.max(10, Math.min(460, u.x));
+    u.y = Math.max(40, Math.min(200, u.y));
+    
+    // Heal nearby
+    if(u.heal>0){
+      gs.myUnits.forEach(ally=>{
+        if(ally.id!==u.id && ally.hp<ally.maxHP){
+          const d=Math.sqrt((ally.x-u.x)**2+(ally.y-u.y)**2);
+          if(d<60){ ally.hp=Math.min(ally.maxHP,ally.hp+u.heal*0.1); }
+        }
+      });
+    }
+  });
+  
+  gs.enemyUnits.forEach(u=>{
+    const target = findTarget(u, gs.myUnits);
+    if(target){
+      const dx = target.x-u.x, dy=target.y-u.y;
+      const dist=Math.sqrt(dx*dx+dy*dy);
+      if(dist>u.range){
+        u.x+=(dx/dist)*u.speed;
+        u.y+=(dy/dist)*0.3;
+      } else {
+        u.cooldown--;
+        if(u.cooldown<=0){
+          u.cooldown=Math.max(15,40-gs.wave*2);
+          let dmg=u.atk;
+          if(u.crit&&Math.random()<0.3) dmg*=2.5;
+          target.hp-=dmg;
+          if(u.aoe){
+            gs.myUnits.forEach(e=>{
+              const d=Math.sqrt((e.x-target.x)**2+(e.y-target.y)**2);
+              if(d<50) e.hp-=dmg*0.5;
+            });
+          }
+          gs.particles.push(makeParticle(target.x,target.y,'#B5D4F4'));
+        }
+      }
+    } else {
+      u.x -= u.speed*0.4;
+    }
+    u.x=Math.max(0,Math.min(450,u.x));
+    u.y=Math.max(40,Math.min(200,u.y));
+  });
+  
+  // Remove dead units, attack base
+  gs.myUnits = gs.myUnits.filter(u=>{
+    if(u.hp<=0){ gs.particles.push(makeParticle(u.x,u.y,'#378ADD')); return false; }
+    if(u.x>=440){ gs.enemyHP-=u.atk*0.5; u.x=430; }
+    return true;
+  });
+  gs.enemyUnits = gs.enemyUnits.filter(u=>{
+    if(u.hp<=0){ gs.particles.push(makeParticle(u.x,u.y,u.color)); return false; }
+    if(u.x<=20){ gs.myHP-=u.atk*0.5; u.x=30; }
+    return true;
+  });
+  
+  // Particles
+  gs.particles = gs.particles.filter(p=>{
+    p.x+=p.vx; p.y+=p.vy; p.life--; return p.life>0;
+  });
+  
+  // Check win/lose
+  if(gs.myHP<=0){ endGame(false); return; }
+  if(gs.enemyHP<=0){ endGame(true); return; }
+  
+  // Update line position
+  const myPower = gs.myUnits.reduce((a,u)=>a+u.hp,0)+1;
+  const enPower = gs.enemyUnits.reduce((a,u)=>a+u.hp,0)+1;
+  const target = myPower/(myPower+enPower);
+  gs.lineSide += (target - gs.lineSide)*0.01;
+}
+
+function findTarget(unit, enemies){
+  let best=null, bestDist=Infinity;
+  enemies.forEach(e=>{
+    if(e.hp<=0) return;
+    const d=Math.sqrt((e.x-unit.x)**2+(e.y-unit.y)**2);
+    if(d<bestDist){ bestDist=d; best=e; }
+  });
+  return best;
+}
+
+function render(){
+  const canvas = document.getElementById('battle-canvas');
+  if(!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W=460, H=220;
+  ctx.clearRect(0,0,W,H);
+  
+  const gs = gameState;
+  const isDark = window.matchMedia('(prefers-color-scheme:dark)').matches;
+  
+  // Background
+  ctx.fillStyle = isDark ? '#1a1a1a' : '#f5f5f0';
+  ctx.fillRect(0,0,W,H);
+  
+  // Lane lines
+  ctx.strokeStyle = isDark ? 'rgba(255,255,255,0.05)':'rgba(0,0,0,0.05)';
+  ctx.lineWidth=1;
+  [60,100,140,180].forEach(y=>{ ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke(); });
+  
+  // Battle line
+  const lineX = Math.floor(gs.lineSide * W);
+  ctx.strokeStyle = isDark?'rgba(255,255,255,0.15)':'rgba(0,0,0,0.12)';
+  ctx.setLineDash([4,4]);
+  ctx.beginPath();ctx.moveTo(lineX,0);ctx.lineTo(lineX,H);ctx.stroke();
+  ctx.setLineDash([]);
+  
+  // Bases
+  ctx.fillStyle = RACES[gs.race].color+'33';
+  ctx.fillRect(0,0,24,H);
+  ctx.fillStyle = RACES[getEnemyRace()].color+'33';
+  ctx.fillRect(W-24,0,24,H);
+  
+  // Units
+  [...gs.myUnits,...gs.enemyUnits].forEach(u=>{
+    const r = u.side==='my' ? 8 : 8;
+    // Unit body
+    ctx.beginPath();
+    ctx.arc(u.x, u.y, r, 0, Math.PI*2);
+    ctx.fillStyle = u.color+(u.side==='my'?'cc':'99');
+    ctx.fill();
+    ctx.strokeStyle = u.color;
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+    
+    // HP bar
+    const hpPct = Math.max(0, u.hp/u.maxHP);
+    ctx.fillStyle = isDark?'rgba(0,0,0,0.6)':'rgba(0,0,0,0.15)';
+    ctx.fillRect(u.x-8, u.y-14, 16, 3);
+    ctx.fillStyle = hpPct>0.5?'#639922':hpPct>0.25?'#BA7517':'#E24B4A';
+    ctx.fillRect(u.x-8, u.y-14, 16*hpPct, 3);
+    
+    // Icon text
+    ctx.fillStyle = isDark?'#fff':'#000';
+    ctx.font = `10px var(--font-sans)`;
+    ctx.textAlign='center';
+    ctx.textBaseline='middle';
+    ctx.fillText(u.icon, u.x, u.y);
+  });
+  
+  // Particles
+  gs.particles.forEach(p=>{
+    ctx.beginPath();
+    ctx.arc(p.x,p.y,2,0,Math.PI*2);
+    ctx.fillStyle = p.color+Math.floor(p.life/30*255).toString(16).padStart(2,'0');
+    ctx.fill();
+  });
+  
+  // Unit counts overlay
+  ctx.fillStyle = RACES[gs.race].color;
+  ctx.font='bold 11px var(--font-sans)';
+  ctx.textAlign='left';
+  ctx.fillText(`◀ ${gs.myUnits.length}`, 4, 14);
+  ctx.fillStyle = RACES[getEnemyRace()].color;
+  ctx.textAlign='right';
+  ctx.fillText(`${gs.enemyUnits.length} ▶`, W-4, 14);
+  
+  // Rush effect
+  if(gs.rushActive){
+    ctx.strokeStyle='#D85A30';
+    ctx.lineWidth=2;
+    ctx.strokeRect(1,1,W-2,H-2);
+  }
+}
+
+function updateUI(){
+  const gs = gameState;
+  document.getElementById('minerals').textContent = Math.floor(gs.minerals);
+  document.getElementById('gas').textContent = gs.gas;
+  document.getElementById('wave-num').textContent = gs.wave;
+  
+  const myPct = gs.myHP/gs.myMaxHP*100;
+  const enPct = gs.enemyHP/gs.enemyMaxHP*100;
+  document.getElementById('my-hp-bar').style.width=Math.max(0,myPct)+'%';
+  document.getElementById('en-hp-bar').style.width=Math.max(0,enPct)+'%';
+  document.getElementById('my-hp-val').textContent=`${Math.max(0,Math.floor(gs.myHP))} / ${gs.myMaxHP}`;
+  document.getElementById('en-hp-val').textContent=`${Math.max(0,Math.floor(gs.enemyHP))} / ${gs.enemyMaxHP}`;
+  
+  // Update affordability
+  const race = RACES[gs.race];
+  race.units.forEach(u=>{
+    const btn = document.getElementById('ubtn-'+u.id);
+    if(btn){
+      const canAfford = gs.minerals>=u.cost && gs.gas>=(u.gasReq||0);
+      btn.classList.toggle('cant-afford',!canAfford);
+    }
+  });
+}
+
+let lastLogCount = 0;
+function addLog(text, cls=''){
+  logLines.unshift({text,cls});
+  if(logLines.length>8) logLines.pop();
+  const box = document.getElementById('log-box');
+  if(box){
+    box.innerHTML = logLines.slice(0,3).map(l=>`<div class="log-line ${l.cls}">${l.text}</div>`).join('');
+  }
+}
+
+function endGame(won){
+  if(!gameState) return;
+  gameState.gameOver = true;
+  if(animFrame) cancelAnimationFrame(animFrame);
+  
+  setTimeout(()=>{
+    document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+    document.getElementById('result-screen').classList.add('active');
+    document.getElementById('result-title').textContent = won ? '승리!' : '패배';
+    document.getElementById('result-title').style.color = won ? '#1D9E75' : '#D85A30';
+    document.getElementById('result-desc').textContent = won
+      ? `${gameState.wave}웨이브만에 적 기지를 파괴했습니다!`
+      : '기지가 함락되었습니다.';
+    document.getElementById('result-stats').textContent = `내 유닛 ${gameState.myUnits.length}기 생존`;
+  }, 500);
+}
+</script>
